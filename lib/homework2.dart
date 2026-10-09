@@ -1,5 +1,5 @@
 void main() {
-  String name = "Bekzat";
+  String name = "Zhibek";
   double balance = 50000.0;
 
   checkBalance(

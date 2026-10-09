@@ -1,10 +1,9 @@
-// Safe E-Commerce Order Processor
 void main() {
   processOrder(
     orderId: "ORD-001",
     itemPrice: 10000.0,
     promoCode: "SAVE10",
-    deliveryFee: 500.0,
+    deliveryFee: null,
   );
 }
 
@@ -14,7 +13,13 @@ double processOrder({
   String? promoCode,
   double? deliveryFee,
 }) {
-  double delivery = deliveryFee ?? 500.0;
+  double delivery;
+
+  if( deliveryFee != null && deliveryFee >= 500.0) {
+    delivery = deliveryFee;
+  } else {
+    delivery = 500.0;
+  }
 
   double discount = 0.0;
 

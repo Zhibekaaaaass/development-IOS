@@ -28,8 +28,6 @@ class _ProfileCardScreenState extends State<ProfileCardScreen> {
   int _followerCount = 1320;
   int _likesCount = 120;
 
-  bool _isLiked = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,76 +48,84 @@ class _ProfileCardScreenState extends State<ProfileCardScreen> {
                 CircleAvatar(
                   radius: 40,
                   backgroundColor: Colors.lime,
-                  child: Icon(Icons.person, size: 50, color: Colors.white),
-                ),
-                SizedBox(height: 16),
-                Text('Tangyt Zhibeka'),
-                Text('Student'),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Column(
-                        children: [
-                          Text(
-                            '$_followerCount',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Followers',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 30),
-                      Column(
-                        children: [
-                          Text(
-                            '$_likesCount',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Likes ❤️',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
+                  child: Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Colors.white,
                   ),
                 ),
+
+                SizedBox(height: 16),
+
+                Text('Tangyt Zhibeka'),
+                Text('Student'),
+
+                SizedBox(height: 16),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          '$_followerCount',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Followers',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+
+                    Column(
+                      children: [
+                        Text(
+                          '$_likesCount',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Likes',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
                 SizedBox(height: 24),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton.icon(
                       onPressed: _toggleFollow,
                       icon: Icon(
-                        _isFollowing ? Icons.check : Icons.person_add,
+                        _isFollowing
+                            ? Icons.check
+                            : Icons.person_add,
                       ),
                       label: Text(
                         _isFollowing ? 'Following' : 'Follow',
                       ),
                     ),
-                    SizedBox(width: 12),
 
                     OutlinedButton.icon(
-                      onPressed: _toggleLike,
+                      onPressed: _like,
+                      icon: Icon(Icons.thumb_up),
+                      label: Text('Like'),
+                    ),
 
-                      icon: Icon(
-                        _isLiked
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                      ),
-
-                      label: Text(
-                        _isLiked ? 'Liked' : 'Like',
-                      ),
+                    OutlinedButton.icon(
+                      onPressed: _dislike,
+                      icon: Icon(Icons.thumb_down),
+                      label: Text('Dislike'),
                     ),
                   ],
                 ),
@@ -141,6 +147,7 @@ class _ProfileCardScreenState extends State<ProfileCardScreen> {
   void _toggleFollow() {
     setState(() {
       _isFollowing = !_isFollowing;
+
       if (_isFollowing) {
         _followerCount++;
       } else {
@@ -149,15 +156,15 @@ class _ProfileCardScreenState extends State<ProfileCardScreen> {
     });
   }
 
-  void _toggleLike() {
+  void _like() {
     setState(() {
-      _isLiked = !_isLiked;
+      _likesCount++;
+    });
+  }
 
-      if (_isLiked) {
-        _likesCount++;
-      } else {
-        _likesCount--;
-      }
+  void _dislike() {
+    setState(() {
+      _likesCount--;
     });
   }
 
@@ -166,7 +173,6 @@ class _ProfileCardScreenState extends State<ProfileCardScreen> {
       _isFollowing = false;
       _followerCount = 1320;
       _likesCount = 120;
-      _isLiked = false;
     });
   }
 }

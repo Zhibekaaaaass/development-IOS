@@ -1,5 +1,5 @@
 void main() {
-  String text = "flutter mobile development";
+  String text = "flutter";
 
   int count = 0;
 

@@ -1,10 +1,9 @@
 void main() {
-  int day = 28;
-  int month = 2;
-  int year = 2024;
+  int day = 29;
+  int month = 9;
+  int year = 2026;
 
-  bool isLeapYear =
-      year % 400 == 0 || (year % 4 == 0 && year % 100 != 0);
+  bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 
   int daysInMonth;
 

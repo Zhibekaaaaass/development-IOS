@@ -1,5 +1,5 @@
 void main() {
-  int number = 3;
+  int number = 5;
 
   bool isPrime = true;
 
