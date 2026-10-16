@@ -72,7 +72,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   void _register() {
-    // Validate all TextFormFields
     final bool isFormValid =
         _formKey.currentState!.validate();
 

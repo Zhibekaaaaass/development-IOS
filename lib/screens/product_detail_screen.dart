@@ -298,6 +298,24 @@ class _ProductDetailScreenState
               ),
             ],
           ),
+          // Новая кнопка возврата
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('BACK TO STORE'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

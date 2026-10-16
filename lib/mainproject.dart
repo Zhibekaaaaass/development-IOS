@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'models/product.dart';
-import 'screens/home_screen.dart';
+import 'screens/root_screen.dart';
 import 'screens/product_detail_screen.dart';
 import 'screens/cart_screen.dart';
 
@@ -22,9 +22,13 @@ class SneakerStoreApp extends StatefulWidget {
 }
 
 class _SneakerStoreAppState extends State<SneakerStoreApp> {
+  // Products saved to Favorites.
   final Set<int> _favoriteIds = <int>{};
+
+  // Product ID -> quantity in cart.
   final Map<int, int> _cart = <int, int>{};
 
+  // Products available in the store.
   final List<Product> _products = const [
     Product(
       id: 1,
@@ -109,6 +113,7 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
     ),
   ];
 
+  // Total quantity of all products in the cart.
   int get _cartCount {
     return _cart.values.fold(
       0,
@@ -116,6 +121,7 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
     );
   }
 
+  // Add a product to Favorites or remove it.
   void _toggleFavorite(int id) {
     setState(() {
       if (!_favoriteIds.add(id)) {
@@ -124,6 +130,7 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
     });
   }
 
+  // Add a product to the cart.
   void _addToCart(Product product) {
     setState(() {
       _cart.update(
@@ -133,7 +140,9 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
       );
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(
+      navigatorKey.currentContext!,
+    ).showSnackBar(
       SnackBar(
         content: Text('${product.name} added to bag'),
         action: SnackBarAction(
@@ -144,6 +153,7 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
     );
   }
 
+  // Increase or decrease product quantity in the cart.
   void _changeQuantity(int productId, int change) {
     setState(() {
       final current = _cart[productId] ?? 0;
@@ -157,40 +167,38 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
     });
   }
 
-  
-void _openCart() {
-  navigatorKey.currentState?.push(
-    MaterialPageRoute<void>(
-      builder: (_) => CartScreen(
-        products: _products,
-        quantities: Map<int, int>.from(_cart),
-        onChangeQuantity: _changeQuantity,
+  // Open the cart screen.
+  void _openCart() {
+    navigatorKey.currentState?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => CartScreen(
+          products: _products,
+          quantities: Map<int, int>.from(_cart),
+          onChangeQuantity: _changeQuantity,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-
-  
-void _openProduct(Product product) {
-  navigatorKey.currentState?.push(
-    MaterialPageRoute<void>(
-      builder: (_) => ProductDetailScreen(
-        product: product,
-        initiallyFavorite: _favoriteIds.contains(product.id),
-        onToggleFavorite: () => _toggleFavorite(product.id),
-        onAddToCart: () => _addToCart(product),
+  // Open product details and pass the complete Product object.
+  void _openProduct(Product product) {
+    navigatorKey.currentState?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProductDetailScreen(
+          product: product,
+          initiallyFavorite: _favoriteIds.contains(product.id),
+          onToggleFavorite: () => _toggleFavorite(product.id),
+          onAddToCart: () => _addToCart(product),
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-  navigatorKey: navigatorKey,
-  debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
+      debugShowCheckedModeBanner: false,
       title: 'Sneaker Store',
       theme: ThemeData(
         useMaterial3: true,
@@ -205,7 +213,7 @@ void _openProduct(Product product) {
           elevation: 0,
         ),
       ),
-      home: HomeScreen(
+      home: StoreRootScreen(
         products: _products,
         favoriteIds: _favoriteIds,
         cartCount: _cartCount,
