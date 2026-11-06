@@ -298,7 +298,6 @@ class _ProductDetailScreenState
               ),
             ],
           ),
-          // Новая кнопка возврата
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,

@@ -38,7 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Sneaker Lover',
+            'Tangyt Zhibek',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 24,

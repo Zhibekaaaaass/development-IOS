@@ -1,16 +1,25 @@
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'models/product.dart';
+import 'providers/cart_provider.dart';
 import 'screens/root_screen.dart';
 import 'screens/product_detail_screen.dart';
 import 'screens/cart_screen.dart';
+import 'screens/catalog_screen.dart';
+
+const bool kUseTaskCatalog = true;
 
 final GlobalKey<NavigatorState> navigatorKey =
     GlobalKey<NavigatorState>();
 
 void main() {
-  runApp(const SneakerStoreApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CartProvider(),
+      child: const SneakerStoreApp(),
+    ),
+  );
 }
 
 class SneakerStoreApp extends StatefulWidget {
@@ -22,13 +31,8 @@ class SneakerStoreApp extends StatefulWidget {
 }
 
 class _SneakerStoreAppState extends State<SneakerStoreApp> {
-  // Products saved to Favorites.
   final Set<int> _favoriteIds = <int>{};
 
-  // Product ID -> quantity in cart.
-  final Map<int, int> _cart = <int, int>{};
-
-  // Products available in the store.
   final List<Product> _products = const [
     Product(
       id: 1,
@@ -113,15 +117,6 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
     ),
   ];
 
-  // Total quantity of all products in the cart.
-  int get _cartCount {
-    return _cart.values.fold(
-      0,
-      (sum, quantity) => sum + quantity,
-    );
-  }
-
-  // Add a product to Favorites or remove it.
   void _toggleFavorite(int id) {
     setState(() {
       if (!_favoriteIds.add(id)) {
@@ -130,15 +125,8 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
     });
   }
 
-  // Add a product to the cart.
   void _addToCart(Product product) {
-    setState(() {
-      _cart.update(
-        product.id,
-        (quantity) => quantity + 1,
-        ifAbsent: () => 1,
-      );
-    });
+    context.read<CartProvider>().add(product);
 
     ScaffoldMessenger.of(
       navigatorKey.currentContext!,
@@ -153,34 +141,14 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
     );
   }
 
-  // Increase or decrease product quantity in the cart.
-  void _changeQuantity(int productId, int change) {
-    setState(() {
-      final current = _cart[productId] ?? 0;
-      final next = current + change;
-
-      if (next <= 0) {
-        _cart.remove(productId);
-      } else {
-        _cart[productId] = next;
-      }
-    });
-  }
-
-  // Open the cart screen.
   void _openCart() {
     navigatorKey.currentState?.push(
       MaterialPageRoute<void>(
-        builder: (_) => CartScreen(
-          products: _products,
-          quantities: Map<int, int>.from(_cart),
-          onChangeQuantity: _changeQuantity,
-        ),
+        builder: (_) => const CartScreen(),
       ),
     );
   }
 
-  // Open product details and pass the complete Product object.
   void _openProduct(Product product) {
     navigatorKey.currentState?.push(
       MaterialPageRoute<void>(
@@ -213,14 +181,21 @@ class _SneakerStoreAppState extends State<SneakerStoreApp> {
           elevation: 0,
         ),
       ),
-      home: StoreRootScreen(
-        products: _products,
-        favoriteIds: _favoriteIds,
-        cartCount: _cartCount,
-        onToggleFavorite: _toggleFavorite,
-        onOpenCart: _openCart,
-        onProductTap: _openProduct,
-      ),
+      home: kUseTaskCatalog
+          ? CatalogScreen(
+              products: _products,
+              onProductTap: _openProduct,
+            )
+          : Consumer<CartProvider>(
+              builder: (context, cart, _) => StoreRootScreen(
+                products: _products,
+                favoriteIds: _favoriteIds,
+                cartCount: cart.count,
+                onToggleFavorite: _toggleFavorite,
+                onOpenCart: _openCart,
+                onProductTap: _openProduct,
+              ),
+            ),
     );
   }
 }

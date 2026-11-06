@@ -1,62 +1,38 @@
-
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import 'package:provider/provider.dart';
 
-class CartScreen extends StatefulWidget {
-  final List<Product> products;
-  final Map<int, int> quantities;
-  final void Function(int productId, int change) onChangeQuantity;
+import '../providers/cart_provider.dart';
 
-  const CartScreen({
-    super.key,
-    required this.products,
-    required this.quantities,
-    required this.onChangeQuantity,
-  });
+class CartScreen extends StatelessWidget {
+  const CartScreen({super.key});
 
-  @override
-  State<CartScreen> createState() => _CartScreenState();
-}
-
-class _CartScreenState extends State<CartScreen> {
-  late Map<int, int> _quantities;
-
-  @override
-  void initState() {
-    super.initState();
-    _quantities = Map<int, int>.from(widget.quantities);
-  }
-
-  List<Product> get _items => widget.products
-      .where((product) => (_quantities[product.id] ?? 0) > 0)
-      .toList();
-
-  double get _total => _items.fold(
-        0.0,
-        (sum, product) =>
-            sum + product.price * (_quantities[product.id] ?? 0),
-      );
-
-  void _change(Product product, int change) {
-    setState(() {
-      final next = (_quantities[product.id] ?? 0) + change;
-
-      if (next <= 0) {
-        _quantities.remove(product.id);
-      } else {
-        _quantities[product.id] = next;
-      }
-    });
-
-    widget.onChangeQuantity(product.id, change);
+  Future<void> _confirmClear(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear bag?'),
+        content: const Text('All items will be removed from your bag.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('CLEAR ALL'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && context.mounted) {
+      context.read<CartProvider>().clear();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final count = _quantities.values.fold<int>(
-      0,
-      (sum, quantity) => sum + quantity,
-    );
+    final cart = context.watch<CartProvider>();
+    final items = cart.items;
 
     return Scaffold(
       appBar: AppBar(
@@ -71,8 +47,17 @@ class _CartScreenState extends State<CartScreen> {
             letterSpacing: 1.3,
           ),
         ),
+        actions: [
+          if (items.isNotEmpty)
+            TextButton.icon(
+              onPressed: () => _confirmClear(context),
+              icon: const Icon(Icons.delete_sweep_outlined),
+              label: const Text('CLEAR ALL'),
+              style: TextButton.styleFrom(foregroundColor: Colors.black),
+            ),
+        ],
       ),
-      body: _items.isEmpty
+      body: items.isEmpty
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(30),
@@ -94,13 +79,9 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Open a sneaker and tap ADD TO BAG '
-                      'to add it here.',
+                      'Add a sneaker from the store to see it here.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black54,
-                        height: 1.5,
-                      ),
+                      style: TextStyle(color: Colors.black54, height: 1.5),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
@@ -113,12 +94,11 @@ class _CartScreenState extends State<CartScreen> {
             )
           : ListView.separated(
               padding: const EdgeInsets.all(18),
-              itemCount: _items.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(height: 13),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 13),
               itemBuilder: (context, index) {
-                final product = _items[index];
-                final quantity = _quantities[product.id] ?? 0;
+                final item = items[index];
+                final product = item.product;
 
                 return Container(
                   padding: const EdgeInsets.all(12),
@@ -135,13 +115,10 @@ class _CartScreenState extends State<CartScreen> {
                           width: 85,
                           height: 85,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              const SizedBox(
+                          errorBuilder: (_, __, ___) => const SizedBox(
                             width: 85,
                             height: 85,
-                            child: Icon(
-                              Icons.image_not_supported_outlined,
-                            ),
+                            child: Icon(Icons.image_not_supported_outlined),
                           ),
                         ),
                       ),
@@ -178,14 +155,16 @@ class _CartScreenState extends State<CartScreen> {
                               children: [
                                 _QuantityButton(
                                   icon: Icons.remove,
-                                  onTap: () => _change(product, -1),
+                                  onTap: () => context
+                                      .read<CartProvider>()
+                                      .changeQuantity(product.id, -1),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 13,
                                   ),
                                   child: Text(
-                                    '$quantity',
+                                    '${item.quantity}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -193,7 +172,9 @@ class _CartScreenState extends State<CartScreen> {
                                 ),
                                 _QuantityButton(
                                   icon: Icons.add,
-                                  onTap: () => _change(product, 1),
+                                  onTap: () => context
+                                      .read<CartProvider>()
+                                      .changeQuantity(product.id, 1),
                                 ),
                               ],
                             ),
@@ -201,18 +182,48 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                       const SizedBox(width: 5),
-                      Text(
-                        '\$${(product.price * quantity).toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '\$${(product.price * item.quantity).toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          IconButton(
+                            tooltip: 'Remove',
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
+                            onPressed: () {
+                              final provider = context.read<CartProvider>();
+                              final quantity = item.quantity;
+                              provider.remove(product.id);
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(
+                                    content: Text('${product.name} removed'),
+                                    action: SnackBarAction(
+                                      label: 'UNDO',
+                                      onPressed: () =>
+                                          provider.restore(product, quantity),
+                                    ),
+                                  ),
+                                );
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 );
               },
             ),
-      bottomNavigationBar: _items.isEmpty
+      bottomNavigationBar: items.isEmpty
           ? null
           : SafeArea(
               minimum: const EdgeInsets.fromLTRB(18, 12, 18, 16),
@@ -238,10 +249,8 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         Text(
-                          '$count',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          '${cart.count}',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -258,7 +267,7 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         Text(
-                          '\$${_total.toStringAsFixed(2)}',
+                          '\$${cart.totalPrice.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
